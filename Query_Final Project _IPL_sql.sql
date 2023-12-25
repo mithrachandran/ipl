@@ -207,7 +207,7 @@ rest of the columns same as deliveries_v03)*/
 
 create table deliveries_v04 as
 select
-concat('match_id','-','inning','-''over','-','ball')as ball_id,
+concat(id,'-',inning,'-',over,'-',ball)as ball_id,
 deliveries_v03.* 
 from deliveries_v03;
 
@@ -221,16 +221,14 @@ select
 /*SQL Row_Number() function is used to sort and assign row numbers 
 to data rows in the presence of multiple groups. 
 For example, to identify the top 10 rows 
-which have the highest order amount in each region,
+that have the highest order amount in each region,
 we can use row_number to assign row numbers in each group (region) 
 with any particular order (decreasing order of order amount) 
 and then we can use this new column to apply filters. 
-Using this knowledge, solve the following exercise. 
-You can use hints to create an additional column of row number.
+Using this knowledge, solving the following exercise. 
 Create table deliveries_v05 with all columns of deliveries_v04 
 and an additional column for row number partition over ball_id. 
-(HINT : Syntax to add along with other columns,  row_number() over (partition by ball_id) as r_num)*/
-
+*/
 
 create table deliveries_v05 as
 select*,
@@ -238,13 +236,20 @@ row_number() over (partition by ball_id ORDER BY (SELECT NULL))as r_num
 from deliveries_v04;
 		
 /*Use the r_num created in deliveries_v05 
-to identify instances where ball_id is repeating. 
-(HINT : select * from deliveries_v05 WHERE r_num=2;)*/	
+to identify instances where ball_id is repeating. */	
 
-select *from deliveries_v05 
-where r_num =2;
+SELECT ball_id, COUNT(r_num) AS repetition_count
+FROM deliveries_v05
+GROUP BY ball_id
+HAVING COUNT(r_num) > 1;
 
-/*Use subqueries to fetch data of all the ball_id which are repeating. 
-(HINT: SELECT * FROM deliveries_v05 WHERE ball_id in (select BALL_ID from deliveries_v05 WHERE r_num=2);*/
+/*Use subqueries to fetch data of all the ball_id which are repeating. */
 
-SELECT * FROM deliveries_v05 WHERE ball_id in (select BALL_ID from deliveries_v05 WHERE r_num=2);
+SELECT *
+FROM deliveries_v05
+WHERE ball_id IN (
+    SELECT ball_id
+    FROM deliveries_v05
+    GROUP BY ball_id
+    HAVING COUNT(r_num) > 1
+);
